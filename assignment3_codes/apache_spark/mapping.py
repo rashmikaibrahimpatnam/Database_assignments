@@ -69,9 +69,10 @@ if __name__ == "__main__":
     conn = MongoClient(mongo_url)
     sc = SparkContext('local','WC_Pyspark')
     db_table = {'ProcessDb': 'Tweets', 'ReuterDb': 'Articles'}
-    fopen = open('wordcount.txt','r+')
+    fopen = open('wordcount.txt','w+')
     fopen.truncate(0)
     fopen.close()
     for db,table in db_table.items():
 
         Mapping().word_Count(sc,conn,db,table)
+    conn.close()

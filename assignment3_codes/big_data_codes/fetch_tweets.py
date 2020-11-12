@@ -45,6 +45,22 @@ class TweetExtraction():
         stream = Stream(auth=authcred,listener=tweelistener)
         stream.filter(track=keywords)
 
+    def search_data(self):
+        authcred = self.set_auth()
+        tweeapi = tweepy.API(authcred,wait_on_rate_limit=True,wait_on_rate_limit_notify=True)
+        keywords_required = "Storm OR Winter OR Canada OR Temperature OR Flu OR Snow OR Indoor OR Safety"
+        raw_data = tweepy.Cursor(tweeapi.search,q=keywords_required,mode='extended',rpp=100).items(1000)
+        for tweet in raw_data:
+            new_dict = {}
+            new_dict['created_at'] = tweet.created_at
+            try:
+                new_dict['text'] = tweet.extended_tweet.full_text
+            except:
+                new_dict['text'] = tweet.text
+            new_dict['name'] = tweet.user.name
+            new_dict['location'] = tweet.user.location
+            ConnectDb().insert_data(new_dict,self.connect,'RawDb','RawTweets')
+
     def process_data(self):
         #function that cleans the fetched tweets and inserts into processdb
         data = ConnectDb().find_data(self.connect,'RawDb','RawTweets')
@@ -55,11 +71,14 @@ class TweetExtraction():
                 if (isinstance(value[prop],bson.objectid.ObjectId)) | (value[prop] == None):
                     if value[prop] == None:
                         processed_data[prop] = value[prop]
-                else: 
-                    formatted = CleanData().clean_emoji_data(value[prop]) #remove emoji
-                    clean_url = CleanData().clean_url_data(formatted) #remove url
-                    clean_spc = CleanData().clean_spc_chars(clean_url) #remove special characters
-                    processed_data[prop] = clean_spc
+                else:
+                    try:
+                        formatted = CleanData().clean_emoji_data(value[prop]) #remove emoji
+                        clean_url = CleanData().clean_url_data(formatted) #remove url
+                        clean_spc = CleanData().clean_spc_chars(clean_url) #remove special characters
+                        processed_data[prop] = clean_spc
+                    except:
+                        pass
             #insert cleaned data into process db
             ConnectDb().insert_data(processed_data,self.connect,'ProcessDb','Tweets')
 
@@ -69,6 +88,7 @@ if __name__ == "__main__":
     conn = conn_db.connect_mongo() 
     tweet_extract = TweetExtraction(conn)
     tweet_extract.stream_data(['Storm', 'Winter', 'Canada', 'Temperature', 'Flu', 'Snow', 'Indoor', 'Safety'])
+    tweet_extract.search_data()
     tweet_extract.process_data()
     conn.close()
     

@@ -8,7 +8,7 @@ given keywords
 '''
 class TweeListener(StreamListener):
     def __init__(self,connection):
-        self.tweet_limit = 2500 #limit on fetching the tweets
+        self.tweet_limit = 1000 #limit on fetching the tweets
         self.count = 0
         self.connection = connection
 
@@ -24,8 +24,12 @@ class TweeListener(StreamListener):
             data = json.loads(raw_data)
             new_dict = {}
             for key,val in data.items():
-
-                if (key == 'created_at') | (key == 'text') | (key == 'user'):
+                if (key == 'text'):
+                    try:
+                        new_dict['text'] = data['extended_tweet']['full_text']
+                    except:
+                        new_dict['text'] = data['text']
+                elif (key == 'created_at') | (key == 'user'):
                     if (key == 'user'):
                         new_dict['name'] = data['user']['name']
                         new_dict['location'] = data['user']['location']
