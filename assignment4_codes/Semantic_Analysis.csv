@@ -1,0 +1,6 @@
+Total number of Documents: 2000 
+Search Query,Document containing term,Total Documents/number of documents term appeared(df),Log10(N/df)
+Canada,60,33.33,1.52
+rain,5,400.0,2.6
+hot,3,666.67,2.82
+cold,9,222.22,2.35
